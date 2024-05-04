@@ -6,6 +6,7 @@ import {
   TranslationQuery,
 } from '.'
 import { Translate } from './index'
+import { MessageFormat } from 'messageformat'
 
 function splitNsKey(key: string, nsSeparator: string | false) {
   if (!nsSeparator) return { i18nKey: key }
@@ -39,7 +40,8 @@ export default function transCore({
 
   const interpolateUnknown = (
     value: unknown,
-    query?: TranslationQuery | null
+    query?: TranslationQuery | null,
+    messageFormat2?: boolean
   ): typeof value => {
     if (Array.isArray(value)) {
       return value.map((val) => interpolateUnknown(val, query))
@@ -52,10 +54,16 @@ export default function transCore({
         lang,
       })
     }
-    return interpolation({ text: value as string, query, config, lang })
+    return interpolation({
+      text: value as string,
+      query,
+      config,
+      lang,
+      messageFormat2,
+    })
   }
 
-  const t: Translate = (key = '', query, options) => {
+  const t: Translate = (key = '', query, options, messageFormat2 = false) => {
     const k = Array.isArray(key) ? key[0] : key
     const { nsSeparator = ':', loggerEnvironment = 'browser' } = config
 
@@ -126,7 +134,7 @@ export default function transCore({
 
     // this can return an empty string if either value was already empty
     // or it contained only an interpolation (e.g. "{{name}}") and the query param was empty
-    return interpolateUnknown(value, query)
+    return interpolateUnknown(value, query, messageFormat2)
   }
 
   return t
@@ -218,13 +226,26 @@ function interpolation({
   query,
   config,
   lang,
+  useMF2,
 }: {
   text?: string
   query?: TranslationQuery | null
   config: I18nConfig
   lang?: string | undefined
+  useMF2?: boolean
 }): string {
   if (!text || !query) return text || ''
+
+  console.log('text to interpolate: ' + text)
+  console.log('Query: ' + query)
+
+  if (useMF2 === true) {
+    // TODO: No functions yet
+    const mf = new MessageFormat(text, lang)
+    const formattedString = mf.formatToString(query)
+    console.log('Formatted MF2 = ' + formattedString)
+    return formattedString
+  }
 
   const escapeRegex = (str: string) =>
     str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')

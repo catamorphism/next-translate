@@ -10,6 +10,7 @@ import formatElements from './formatElements'
  * to -> <h1>This is an <b>example</b><h1>
  */
 export default function Trans({
+  messageFormat2,
   i18nKey,
   values,
   components,
@@ -24,11 +25,16 @@ export default function Trans({
    * Memoize the transformation
    */
   const result = useMemo(() => {
-    const text = t<string>(i18nKey, values, {
-      fallback,
-      default: defaultTrans,
-      returnObjects,
-    })
+    const text = t<string>(
+      i18nKey,
+      values,
+      {
+        fallback,
+        default: defaultTrans,
+        returnObjects,
+      },
+      messageFormat2
+    )
 
     if (!text) return text
 
@@ -41,5 +47,9 @@ export default function Trans({
     return formatElements(text, components)
   }, [i18nKey, values, components, lang]) as string
 
+  console.log('hello, local copy')
+  console.log('result = ' + result)
   return result
 }
+
+export { default as ReactFromNextTranslatePlugin } from 'react'
